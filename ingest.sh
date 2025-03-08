@@ -7,11 +7,11 @@ if [ -f "digest.txt" ]; then
 fi
 
 # Run gitingest to generate digest.txt
-echo "Running gitingest..."
+echo "Running..."
 gitingest . --exclude-pattern ingest.sh --exclude-pattern editor.html --exclude-pattern preview.html
 
 # Wait a moment to ensure digest.txt is created
-sleep 1
+sleep 0.1
 
 DIGEST_FILE="digest.txt"
 
@@ -20,10 +20,28 @@ if [ -f "$DIGEST_FILE" ]; then
     # Read the content of digest.txt
     DIGEST_CONTENT=$(cat "$DIGEST_FILE")
 
-    # Overwrite digest.txt with the raw content only
-    echo "$DIGEST_CONTENT" > "$DIGEST_FILE"
+    # Format the content with only client codebase
+    FORMATTED_CONTENT="<goal>
+ 
+</goal>
 
-    echo "digest.txt printed without tags!"
+<output_requirements>
+- Don't be lazy, provide thorough, high-quality code.
+- Provide complete file contents for any modified or new files.
+- Write clean, well-documented code with appropriate error handling.
+- Never use ellipsis (...) or placeholder comments, as an excuse to omit code for brewity.
+</output_requirements>
+
+<context>
+    <codebase>
+$DIGEST_CONTENT
+    </codebase>
+</context>"
+
+    # Overwrite digest.txt with the formatted content
+    echo "$FORMATTED_CONTENT" > "$DIGEST_FILE"
+
+    echo "digest.txt formatted!"
 else
     echo "Error: digest.txt not found."
 fi
