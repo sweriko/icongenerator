@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI App Icon Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1>AI App Icon Generator</h1>
+        </div>
+
+        <div class="app-content">
+            <!-- Initial Step (Only Input) -->
+            <div id="initial-step" class="input-container">
+                <div class="input-wrapper">
+                    <textarea id="app-description" placeholder="Describe your app or tell me an icon/logo concept..."></textarea>
+                    <button id="generate-btn" class="btn btn-primary">Generate</button>
+                </div>
+                
+                <div class="style-presets">
+                    <div class="style-presets-label">(optional) style presets:</div>
+                    <div class="style-presets-container">
+                        <button class="style-preset-btn" data-style="pixelart style">Pixel Art</button>
+                        <button class="style-preset-btn" data-style="neon darkmode">Neon Dark</button>
+                        <button class="style-preset-btn" data-style="brutalist">Brutalist</button>
+                        <button class="style-preset-btn" data-style="lineart">Line Art</button>
+                        <button class="style-preset-btn" data-style="monochrome">Monochrome</button>
+                        <button class="style-preset-btn" data-style="abstract">Abstract</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generation Step (Preview + Accept/Reject) -->
+            <div id="generation-step" class="generation-container hidden">
+                <div class="canvas-wrapper">
+                    <canvas id="preview-canvas" width="512" height="512"></canvas>
+                    <div id="loading-overlay" class="loading-overlay">
+                        <div class="spinner"></div>
+                        <p>Generating your icon...</p>
+                    </div>
+                </div>
+                
+                <div id="preview-controls" class="button-group hidden">
+                    <button id="start-over-btn" class="btn btn-reject">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        Start Over
+                    </button>
+                    <button id="reject-btn" class="btn btn-confirm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7l3 2.7"></path><path d="M21 16a9 9 0 0 1-15 6.7l-3-2.7"></path><path d="M3 22v-6h6"></path></svg>
+                        Re-generate
+                    </button>
+                    <button id="accept-btn" class="btn btn-accept">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Iconize!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Edit Step -->
+            <div id="edit-step" class="canvas-container hidden">
+                <div class="edit-container">
+                    <div class="canvas-wrapper edit-canvas-wrapper">
+                        <canvas id="edit-canvas" width="1024" height="1024"></canvas>
+                        <div id="editor-loading-overlay" class="loading-overlay hidden">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="phone-emulator" class="phone-emulator hidden">
+                        <h3>iOS Preview</h3>
+                        <div id="iphonePreview" class="iphone-preview">
+                            <div class="screen">
+                                <!-- Dynamic Island -->
+                                <div class="dynamic-island"></div>
+                                
+                                <!-- Status Bar -->
+                                <div class="status-bar">
+                                    <div class="status-time" id="statusTime">
+                                        <span>12:30</span>
+                                    </div>
+                                    <div class="status-icons">
+                                        <svg viewBox="0 0 24 24" class="wifi-icon" fill="currentColor">
+                                            <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9z"/>
+                                            <path d="M8 16l3 3 3-3c-1.65-1.66-4.34-1.66-6 0z"/>
+                                            <path d="M5 13l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                                        </svg>
+                                        <div class="battery">
+                                            <div class="battery-level">
+                                                <span>100%</span>
+                                            </div>
+                                            <div class="battery-pin"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Widgets Row -->
+                                <div class="widgets-row">
+                                    <!-- Weather Widget -->
+                                    <div class="widget weather-widget" id="weatherWidget">
+                                        <div class="weather-header">
+                                            <span class="city-name">New York</span>
+                                            <span class="temperature">73°</span>
+                                        </div>
+                                        <div class="weather-details">
+                                            <span class="sun-icon">
+                                                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                                    <circle cx="12" cy="12" r="5" />
+                                                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                                                </svg>
+                                            </span>
+                                            <div class="weather-text">
+                                                <div>Sunny</div>
+                                                <div>H:81° L:61°</div>
+                                            </div>
+                                        </div>
+                                        <div class="widget-label">Weather</div>
+                                    </div>
+                                    
+                                    <!-- Calendar Widget -->
+                                    <div class="widget calendar-widget" id="calendarWidget">
+                                        <div class="day-text">WEDNESDAY</div>
+                                        <div class="date-number">4</div>
+                                        <div class="event-text">No events today</div>
+                                        <div class="widget-label">Calendar</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- App Grid -->
+                                <div class="app-grid" id="appGrid">
+                                    <!-- Grid will be populated by JavaScript -->
+                                </div>
+                                
+                                <!-- Dock with user's app included -->
+                                <div class="dock">
+                                    <div class="dock-bg" id="dockIcons">
+                                        <!-- Dock icons will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Home Indicator -->
+                                <div class="home-indicator"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="canvas-help">
+                    <p>Drag to position or resize • Arrow keys for precision</p>
+                </div>
+                
+                <div class="button-group">
+                    <button id="cancel-btn" class="btn btn-cancel">Cancel</button>
+                    <button id="confirm-btn" class="btn btn-confirm">Confirm Selection</button>
+                </div>
+            </div>
+
+            <!-- Final Step -->
+            <div id="final-step" class="canvas-container hidden">
+                <div class="canvas-wrapper">
+                    <canvas id="final-canvas" width="1024" height="1024"></canvas>
+                </div>
+                
+                <div class="button-group">
+                    <button id="reset-btn" class="btn btn-reject">Start Over</button>
+                    <button id="edit-btn" class="btn btn-confirm">Edit</button>
+                    <button id="download-btn" class="btn btn-download">
+                        Download
+                        <span class="arrow-down"></span>
+                    </button>
+                    
+                    <!-- Download dropdown menu -->
+                    <div id="download-menu" class="download-menu">
+                        <div class="download-option" id="download-single">
+                            <div class="download-option-title">1024×1024px</div>
+                            <div class="download-option-description">Download icon at original size</div>
+                        </div>
+                        <div class="download-option" id="download-all">
+                            <div class="download-option-title">ALL</div>
+                            <div class="download-option-description">Download icon in all required sizes for iOS and Android</div>
+                            <div class="sizes-grid">
+                                <div class="size-item" data-size="16">16×16</div>
+                                <div class="size-item" data-size="32">32×32</div>
+                                <div class="size-item" data-size="58">58×58</div>
+                                <div class="size-item" data-size="76">76×76</div>
+                                <div class="size-item" data-size="80">80×80</div>
+                                <div class="size-item" data-size="87">87×87</div>
+                                <div class="size-item" data-size="120">120×120</div>
+                                <div class="size-item" data-size="152">152×152</div>
+                                <div class="size-item" data-size="167">167×167</div>
+                                <div class="size-item" data-size="180">180×180</div>
+                                <div class="size-item" data-size="1024">1024×1024</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="app-footer">
+            <p>Made with <img src="hearticon.png" alt="♥" class="heart-icon"> • by <a href="https://x.com/sweriko" target="_blank">sweriko</a></p>
+        </div>
+    </div>
+
+    <!-- JSZip Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

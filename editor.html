@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Icon Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Changed from center to flex-start to remove top gap */
+            min-height: 100vh;
+            padding: 0; /* Removed padding to make content start at top */
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: visible;
+        }
+
+        .app-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .app-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .app-content {
+            padding: 24px;
+        }
+
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            text-align: center;
+        }
+
+        .upload-text {
+            margin-bottom: 24px;
+        }
+
+        .upload-text h2 {
+            font-size: 18px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .upload-text p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .upload-btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .upload-btn:hover {
+            background-color: #2563eb;
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        canvas {
+            width: 100%;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #3b82f6;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .canvas-help {
+            margin-top: 16px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            max-width: 600px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            position: relative;
+            margin-top: 16px;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-cancel {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-cancel:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-confirm {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-download {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background-color: #059669;
+        }
+
+        /* Dropdown arrow */
+        .arrow-down {
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid white;
+            margin-left: 8px;
+        }
+
+        /* Download dropdown menu - Changed position to right instead of below */
+        .download-menu {
+            position: absolute;
+            top: 0;
+            left: 100%; /* Position to the right of the button */
+            margin-left: 5px; /* Small gap between button and menu */
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 320px;
+            z-index: 100;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateX(-10px);
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .download-menu.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .download-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .download-option:last-child {
+            border-bottom: none;
+        }
+
+        .download-option:hover {
+            background-color: #f9fafb;
+        }
+
+        .download-option-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #374151;
+        }
+
+        .download-option-description {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .sizes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        /* Modified size-item to be clickable with hover effect */
+        .size-item {
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            padding: 4px 8px;
+            text-align: center;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .size-item:hover {
+            background-color: #e5e7eb;
+            color: #111827;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* For mobile view */
+        @media (max-width: 640px) {
+            .app-container {
+                border-radius: 0;
+            }
+
+            .upload-container {
+                padding: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .download-menu {
+                width: 100%;
+                top: 100%;
+                left: 0;
+                margin-left: 0;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1>AI Icon Editor</h1>
+            <p>Create perfect app icons with precise control</p>
+        </div>
+
+        <div class="app-content">
+            <!-- Upload Step -->
+            <div id="upload-step" class="upload-container">
+                <div class="upload-text">
+                    <h2>Upload Your Image</h2>
+                    <p>Upload a 1024x1024 image to start editing</p>
+                </div>
+                
+                <label for="image-upload" class="upload-btn">Choose Image</label>
+                <input type="file" id="image-upload" accept="image/*" style="display: none;">
+            </div>
+
+            <!-- Edit Step -->
+            <div id="edit-step" class="canvas-container hidden">
+                <div class="canvas-wrapper">
+                    <canvas id="edit-canvas" width="1024" height="1024"></canvas>
+                    <div id="loading-overlay" class="loading-overlay hidden">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+                
+                <div class="canvas-help">
+                    <p>Position and resize the red selection box to frame your icon</p>
+                    <p>Drag the circle in the corner to resize, or drag anywhere inside to move</p>
+                </div>
+                
+                <div class="button-group">
+                    <button id="cancel-btn" class="btn btn-cancel">Cancel</button>
+                    <button id="confirm-btn" class="btn btn-confirm">Confirm Selection</button>
+                </div>
+            </div>
+
+            <!-- Final Step -->
+            <div id="final-step" class="canvas-container hidden">
+                <div class="canvas-wrapper">
+                    <canvas id="final-canvas" width="1024" height="1024"></canvas>
+                </div>
+                
+                <div class="button-group">
+                    <button id="reset-btn" class="btn btn-cancel">Start Over</button>
+                    <button id="download-btn" class="btn btn-download">
+                        Download
+                        <span class="arrow-down"></span>
+                    </button>
+                    
+                    <!-- Download dropdown menu -->
+                    <div id="download-menu" class="download-menu">
+                        <div class="download-option" id="download-single">
+                            <div class="download-option-title">1024×1024px</div>
+                            <div class="download-option-description">Download icon at original size</div>
+                        </div>
+                        <div class="download-option" id="download-all">
+                            <div class="download-option-title">ALL</div>
+                            <div class="download-option-description">Download icon in all required sizes for iOS and macOS</div>
+                            <div class="sizes-grid">
+                                <div class="size-item" data-size="16">16×16</div>
+                                <div class="size-item" data-size="32">32×32</div>
+                                <div class="size-item" data-size="58">58×58</div>
+                                <div class="size-item" data-size="76">76×76</div>
+                                <div class="size-item" data-size="80">80×80</div>
+                                <div class="size-item" data-size="87">87×87</div>
+                                <div class="size-item" data-size="120">120×120</div>
+                                <div class="size-item" data-size="152">152×152</div>
+                                <div class="size-item" data-size="167">167×167</div>
+                                <div class="size-item" data-size="180">180×180</div>
+                                <div class="size-item" data-size="1024">1024×1024</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSZip Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <script>
+        // Elements
+        const uploadStep = document.getElementById('upload-step');
+        const editStep = document.getElementById('edit-step');
+        const finalStep = document.getElementById('final-step');
+        const imageUpload = document.getElementById('image-upload');
+        const editCanvas = document.getElementById('edit-canvas');
+        const finalCanvas = document.getElementById('final-canvas');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const downloadMenu = document.getElementById('download-menu');
+        const downloadSingle = document.getElementById('download-single');
+        const downloadAll = document.getElementById('download-all');
+        const sizeItems = document.querySelectorAll('.size-item');
+
+        // Canvas contexts
+        const editCtx = editCanvas.getContext('2d');
+        const finalCtx = finalCanvas.getContext('2d');
+
+        // App state
+        let currentImage = null;
+        let finalIcon = null;
+        let selectionBox = {
+            x: 0,
+            y: 0,
+            size: 400,
+            isDragging: false,
+            isResizing: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            resizeStartPosition: { x: 0, y: 0 },
+            resizeStartSize: 0
+        };
+
+        // Icon sizes configurations
+        const iconSizes = {
+            ios: [
+                { size: 120, name: 'iPhone-Home-Screen@2x', folder: 'iOS/AppIcon.appiconset' },
+                { size: 180, name: 'iPhone-Home-Screen@3x', folder: 'iOS/AppIcon.appiconset' },
+                { size: 167, name: 'iPad-Pro-Home-Screen', folder: 'iOS/AppIcon.appiconset' },
+                { size: 152, name: 'iPad-Home-Screen', folder: 'iOS/AppIcon.appiconset' },
+                { size: 80, name: 'Spotlight@2x', folder: 'iOS/AppIcon.appiconset' },
+                { size: 120, name: 'Spotlight@3x', folder: 'iOS/AppIcon.appiconset' },
+                { size: 58, name: 'Settings@2x', folder: 'iOS/AppIcon.appiconset' },
+                { size: 87, name: 'Settings@3x', folder: 'iOS/AppIcon.appiconset' },
+                { size: 76, name: 'Notifications@2x', folder: 'iOS/AppIcon.appiconset' },
+                { size: 114, name: 'Notifications@3x', folder: 'iOS/AppIcon.appiconset' }
+            ],
+            macos: [
+                { size: 16, name: 'icon_16x16', folder: 'macOS/AppIcon.appiconset' },
+                { size: 32, name: 'icon_16x16@2x', folder: 'macOS/AppIcon.appiconset' },
+                { size: 32, name: 'icon_32x32', folder: 'macOS/AppIcon.appiconset' },
+                { size: 64, name: 'icon_32x32@2x', folder: 'macOS/AppIcon.appiconset' },
+                { size: 128, name: 'icon_128x128', folder: 'macOS/AppIcon.appiconset' },
+                { size: 256, name: 'icon_128x128@2x', folder: 'macOS/AppIcon.appiconset' },
+                { size: 256, name: 'icon_256x256', folder: 'macOS/AppIcon.appiconset' },
+                { size: 512, name: 'icon_256x256@2x', folder: 'macOS/AppIcon.appiconset' },
+                { size: 512, name: 'icon_512x512', folder: 'macOS/AppIcon.appiconset' },
+                { size: 1024, name: 'icon_512x512@2x', folder: 'macOS/AppIcon.appiconset' },
+                { size: 1024, name: 'icon_1024x1024', folder: 'macOS/AppIcon.appiconset' }
+            ]
+        };
+
+        // Scale factor for high DPI displays
+        const getScaleFactor = (canvas) => {
+            const rect = canvas.getBoundingClientRect();
+            return canvas.width / rect.width;
+        };
+
+        // Show loading state
+        function showLoading(show) {
+            loadingOverlay.classList.toggle('hidden', !show);
+        }
+
+        // Change app step
+        function setStep(step) {
+            uploadStep.classList.toggle('hidden', step !== 'upload');
+            editStep.classList.toggle('hidden', step !== 'edit');
+            finalStep.classList.toggle('hidden', step !== 'final');
+        }
+
+        // Draw checkerboard pattern (for transparency)
+        function drawCheckerboard(ctx, width, height) {
+            const tileSize = 16;
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.fillStyle = '#e0e0e0';
+            for (let x = 0; x < width; x += tileSize) {
+                for (let y = 0; y < height; y += tileSize) {
+                    if ((x / tileSize + y / tileSize) % 2 === 0) {
+                        ctx.fillRect(x, y, tileSize, tileSize);
+                    }
+                }
+            }
+        }
+
+        // Draw the selection overlay with rounded rect and grid guide
+        function drawSelectionOverlay() {
+            // First clear the canvas and draw the image
+            editCtx.clearRect(0, 0, editCanvas.width, editCanvas.height);
+            
+            // Draw background checkerboard
+            drawCheckerboard(editCtx, editCanvas.width, editCanvas.height);
+            
+            // Draw the image
+            editCtx.drawImage(currentImage, 0, 0, editCanvas.width, editCanvas.height);
+            
+            // Semi-transparent overlay for the whole canvas
+            editCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            editCtx.fillRect(0, 0, editCanvas.width, editCanvas.height);
+            
+            // Save context state before clipping
+            editCtx.save();
+            
+            const radius = 80; // Corner radius
+            const x = selectionBox.x;
+            const y = selectionBox.y;
+            const size = selectionBox.size;
+            
+            // Create rounded rectangle path
+            editCtx.beginPath();
+            editCtx.moveTo(x + radius, y);
+            editCtx.lineTo(x + size - radius, y);
+            editCtx.quadraticCurveTo(x + size, y, x + size, y + radius);
+            editCtx.lineTo(x + size, y + size - radius);
+            editCtx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
+            editCtx.lineTo(x + radius, y + size);
+            editCtx.quadraticCurveTo(x, y + size, x, y + size - radius);
+            editCtx.lineTo(x, y + radius);
+            editCtx.quadraticCurveTo(x, y, x + radius, y);
+            editCtx.closePath();
+            
+            // Clear the selection area and redraw the image just for that part
+            editCtx.clip();
+            editCtx.clearRect(x, y, size, size);
+            editCtx.drawImage(currentImage, 0, 0, editCanvas.width, editCanvas.height);
+            
+            // Draw icon grid overlay guide
+            drawIconGrid(editCtx, x, y, size);
+            
+            // Restore context state
+            editCtx.restore();
+            
+            // Draw the rounded rectangle border
+            editCtx.strokeStyle = '#ff4444';
+            editCtx.lineWidth = 3;
+            
+            editCtx.beginPath();
+            editCtx.moveTo(x + radius, y);
+            editCtx.lineTo(x + size - radius, y);
+            editCtx.quadraticCurveTo(x + size, y, x + size, y + radius);
+            editCtx.lineTo(x + size, y + size - radius);
+            editCtx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
+            editCtx.lineTo(x + radius, y + size);
+            editCtx.quadraticCurveTo(x, y + size, x, y + size - radius);
+            editCtx.lineTo(x, y + radius);
+            editCtx.quadraticCurveTo(x, y, x + radius, y);
+            editCtx.closePath();
+            editCtx.stroke();
+            
+            // Draw resize handle
+            editCtx.fillStyle = '#ff4444';
+            editCtx.beginPath();
+            editCtx.arc(x + size - 15, y + size - 15, 8, 0, Math.PI * 2);
+            editCtx.fill();
+        }
+        
+        // Draw icon grid overlay guide
+        function drawIconGrid(ctx, x, y, size) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)'; // Blue with transparency
+            ctx.lineWidth = 1;
+            
+            const center = {
+                x: x + size / 2,
+                y: y + size / 2
+            };
+            
+            // Draw outer rounded square (already exists from clipping path)
+            
+            // Draw grid lines - vertical thirds
+            for (let i = 1; i < 3; i++) {
+                const posX = x + (size * i / 3);
+                ctx.beginPath();
+                ctx.moveTo(posX, y);
+                ctx.lineTo(posX, y + size);
+                ctx.stroke();
+            }
+            
+            // Draw grid lines - horizontal thirds
+            for (let i = 1; i < 3; i++) {
+                const posY = y + (size * i / 3);
+                ctx.beginPath();
+                ctx.moveTo(x, posY);
+                ctx.lineTo(x + size, posY);
+                ctx.stroke();
+            }
+            
+            // Draw center cross lines
+            ctx.beginPath();
+            // Vertical line
+            ctx.moveTo(center.x, y);
+            ctx.lineTo(center.x, y + size);
+            // Horizontal line
+            ctx.moveTo(x, center.y);
+            ctx.lineTo(x + size, center.y);
+            ctx.stroke();
+            
+            // Draw concentric circles
+            const radiusSizes = [size * 0.1, size * 0.2, size * 0.35, size * 0.5];
+            radiusSizes.forEach(radius => {
+                ctx.beginPath();
+                ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+            
+            // Draw diagonal guidelines
+            ctx.beginPath();
+            // Top-left to bottom-right
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size, y + size);
+            // Top-right to bottom-left
+            ctx.moveTo(x + size, y);
+            ctx.lineTo(x, y + size);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // Draw the final icon on the canvas
+        function drawFinalIcon() {
+            finalCtx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
+            
+            // Draw checkerboard background
+            drawCheckerboard(finalCtx, finalCanvas.width, finalCanvas.height);
+            
+            if (finalIcon) {
+                // Draw the icon filling the entire canvas (full 1024x1024 size)
+                finalCtx.drawImage(finalIcon, 0, 0, finalCanvas.width, finalCanvas.height);
+            }
+        }
+
+        // Handle file upload
+        imageUpload.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                showLoading(true);
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        currentImage = img;
+                        
+                        // Center the selection box initially
+                        selectionBox.x = (editCanvas.width - selectionBox.size) / 2;
+                        selectionBox.y = (editCanvas.height - selectionBox.size) / 2;
+                        
+                        drawSelectionOverlay();
+                        showLoading(false);
+                        setStep('edit');
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // Mouse down event for dragging and resizing
+        editCanvas.addEventListener('mousedown', function(e) {
+            const rect = editCanvas.getBoundingClientRect();
+            const scaleFactor = getScaleFactor(editCanvas);
+            const mouseX = (e.clientX - rect.left) * scaleFactor;
+            const mouseY = (e.clientY - rect.top) * scaleFactor;
+            
+            // Check if mouse is on the resize handle (bottom right corner)
+            const handleSize = 30;
+            const resizeHandleX = selectionBox.x + selectionBox.size - handleSize;
+            const resizeHandleY = selectionBox.y + selectionBox.size - handleSize;
+            
+            if (
+                mouseX >= resizeHandleX && 
+                mouseX <= selectionBox.x + selectionBox.size && 
+                mouseY >= resizeHandleY && 
+                mouseY <= selectionBox.y + selectionBox.size
+            ) {
+                selectionBox.isResizing = true;
+                selectionBox.isDragging = false;
+                selectionBox.resizeStartPosition = { x: mouseX, y: mouseY };
+                selectionBox.resizeStartSize = selectionBox.size;
+            } else if (
+                mouseX >= selectionBox.x && 
+                mouseX <= selectionBox.x + selectionBox.size && 
+                mouseY >= selectionBox.y && 
+                mouseY <= selectionBox.y + selectionBox.size
+            ) {
+                selectionBox.isDragging = true;
+                selectionBox.isResizing = false;
+                selectionBox.dragStartX = mouseX - selectionBox.x;
+                selectionBox.dragStartY = mouseY - selectionBox.y;
+            }
+        });
+
+        // Mouse move event for dragging and resizing
+        editCanvas.addEventListener('mousemove', function(e) {
+            if (!selectionBox.isDragging && !selectionBox.isResizing) return;
+            
+            const rect = editCanvas.getBoundingClientRect();
+            const scaleFactor = getScaleFactor(editCanvas);
+            const mouseX = (e.clientX - rect.left) * scaleFactor;
+            const mouseY = (e.clientY - rect.top) * scaleFactor;
+            
+            if (selectionBox.isDragging) {
+                // Calculate new position, but keep within canvas bounds
+                let newX = mouseX - selectionBox.dragStartX;
+                let newY = mouseY - selectionBox.dragStartY;
+                
+                // Ensure the selection box stays within the canvas
+                newX = Math.max(0, Math.min(newX, editCanvas.width - selectionBox.size));
+                newY = Math.max(0, Math.min(newY, editCanvas.height - selectionBox.size));
+                
+                selectionBox.x = newX;
+                selectionBox.y = newY;
+                
+                drawSelectionOverlay();
+            } else if (selectionBox.isResizing) {
+                // Calculate the distance moved
+                const deltaX = mouseX - selectionBox.resizeStartPosition.x;
+                const deltaY = mouseY - selectionBox.resizeStartPosition.y;
+                
+                // Use the larger of the two deltas to maintain aspect ratio
+                const delta = Math.max(deltaX, deltaY);
+                
+                // Calculate new size, but keep within bounds
+                let newSize = selectionBox.resizeStartSize + delta;
+                
+                // Minimum size of 100px, maximum size fits within canvas from current position
+                newSize = Math.max(100, Math.min(newSize, Math.min(
+                    editCanvas.width - selectionBox.x, 
+                    editCanvas.height - selectionBox.y
+                )));
+                
+                selectionBox.size = newSize;
+                
+                drawSelectionOverlay();
+            }
+        });
+
+        // Mouse up and mouse leave events
+        function endDragResize() {
+            selectionBox.isDragging = false;
+            selectionBox.isResizing = false;
+        }
+
+        editCanvas.addEventListener('mouseup', endDragResize);
+        editCanvas.addEventListener('mouseleave', endDragResize);
+
+        // Touch events for mobile support
+        editCanvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (e.touches.length !== 1) return;
+            
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            editCanvas.dispatchEvent(mouseEvent);
+        });
+
+        editCanvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if (e.touches.length !== 1) return;
+            
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            editCanvas.dispatchEvent(mouseEvent);
+        });
+
+        editCanvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            const mouseEvent = new MouseEvent('mouseup');
+            editCanvas.dispatchEvent(mouseEvent);
+        });
+
+        // Toggle download menu when clicking the download button
+        downloadBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            downloadMenu.classList.toggle('active');
+        });
+
+        // Close the menu when clicking elsewhere
+        document.addEventListener('click', function() {
+            downloadMenu.classList.remove('active');
+        });
+
+        // Prevent menu from closing when clicking on it
+        downloadMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Confirm selection button
+        confirmBtn.addEventListener('click', function() {
+            if (!currentImage) return;
+            
+            // Create an offscreen canvas to crop the image
+            const offscreenCanvas = document.createElement('canvas');
+            const offscreenCtx = offscreenCanvas.getContext('2d');
+            
+            // Size the offscreen canvas to match the selection
+            offscreenCanvas.width = selectionBox.size;
+            offscreenCanvas.height = selectionBox.size;
+            
+            // Draw the selected part of the image
+            offscreenCtx.drawImage(
+                currentImage,
+                selectionBox.x, selectionBox.y, selectionBox.size, selectionBox.size,
+                0, 0, selectionBox.size, selectionBox.size
+            );
+            
+            // Create a second offscreen canvas for the final icon with rounded corners
+            // Set it directly to 1024x1024 size
+            const iconCanvas = document.createElement('canvas');
+            const iconCtx = iconCanvas.getContext('2d');
+            
+            iconCanvas.width = 1024;
+            iconCanvas.height = 1024;
+            
+            // Calculate scaled radius for the new size
+            const cornerRadiusScale = 1024 / selectionBox.size;
+            const radius = 80 * cornerRadiusScale; // Scale corner radius appropriately
+            
+            iconCtx.beginPath();
+            iconCtx.moveTo(radius, 0);
+            iconCtx.lineTo(1024 - radius, 0);
+            iconCtx.quadraticCurveTo(1024, 0, 1024, radius);
+            iconCtx.lineTo(1024, 1024 - radius);
+            iconCtx.quadraticCurveTo(1024, 1024, 1024 - radius, 1024);
+            iconCtx.lineTo(radius, 1024);
+            iconCtx.quadraticCurveTo(0, 1024, 0, 1024 - radius);
+            iconCtx.lineTo(0, radius);
+            iconCtx.quadraticCurveTo(0, 0, radius, 0);
+            iconCtx.closePath();
+            
+            // Clip to the rounded rectangle and draw the cropped image scaled to fill the canvas
+            iconCtx.clip();
+            iconCtx.drawImage(offscreenCanvas, 0, 0, selectionBox.size, selectionBox.size, 0, 0, 1024, 1024);
+            
+            // Create an image object from the canvas
+            finalIcon = new Image();
+            finalIcon.onload = function() {
+                setStep('final');
+                drawFinalIcon();
+            };
+            finalIcon.src = iconCanvas.toDataURL('image/png');
+        });
+
+        // Cancel button
+        cancelBtn.addEventListener('click', resetApp);
+
+        // Reset button
+        resetBtn.addEventListener('click', resetApp);
+
+        // Function to reset the app state
+        function resetApp() {
+            currentImage = null;
+            finalIcon = null;
+            selectionBox = {
+                x: 0,
+                y: 0,
+                size: 400,
+                isDragging: false,
+                isResizing: false,
+                dragStartX: 0,
+                dragStartY: 0,
+                resizeStartPosition: { x: 0, y: 0 },
+                resizeStartSize: 0
+            };
+            
+            imageUpload.value = '';
+            setStep('upload');
+        }
+
+        // Function to resize the icon to a specific size
+        function resizeIcon(sourceImage, targetSize) {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = targetSize;
+                canvas.height = targetSize;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw the icon with rounded corners on the new canvas
+                const radius = targetSize * (80 / selectionBox.size); // Scale corner radius
+                
+                ctx.beginPath();
+                ctx.moveTo(radius, 0);
+                ctx.lineTo(targetSize - radius, 0);
+                ctx.quadraticCurveTo(targetSize, 0, targetSize, radius);
+                ctx.lineTo(targetSize, targetSize - radius);
+                ctx.quadraticCurveTo(targetSize, targetSize, targetSize - radius, targetSize);
+                ctx.lineTo(radius, targetSize);
+                ctx.quadraticCurveTo(0, targetSize, 0, targetSize - radius);
+                ctx.lineTo(0, radius);
+                ctx.quadraticCurveTo(0, 0, radius, 0);
+                ctx.closePath();
+                
+                // Clip to the rounded rectangle and draw the resized image
+                ctx.clip();
+                ctx.drawImage(sourceImage, 0, 0, targetSize, targetSize);
+                
+                // Get data URL for the resized icon
+                const dataURL = canvas.toDataURL('image/png');
+                
+                // Create an image object to return
+                const img = new Image();
+                img.onload = () => resolve({ size: targetSize, dataURL, img });
+                img.src = dataURL;
+            });
+        }
+
+        // Function to convert data URL to Blob
+        function dataURLToBlob(dataURL) {
+            const parts = dataURL.split(';base64,');
+            const contentType = parts[0].split(':')[1];
+            const raw = window.atob(parts[1]);
+            const rawLength = raw.length;
+            const uInt8Array = new Uint8Array(rawLength);
+            
+            for (let i = 0; i < rawLength; ++i) {
+                uInt8Array[i] = raw.charCodeAt(i);
+            }
+            
+            return new Blob([uInt8Array], { type: contentType });
+        }
+
+        // Download single icon (1024x1024)
+        downloadSingle.addEventListener('click', async function() {
+            if (!finalIcon) return;
+            
+            showLoading(true);
+            
+            try {
+                // Resize to 1024x1024 regardless of selection size
+                const resizedIcon = await resizeIcon(finalIcon, 1024);
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'app-icon-1024.png';
+                link.href = resizedIcon.dataURL;
+                link.click();
+            } catch (error) {
+                console.error('Error resizing icon:', error);
+            } finally {
+                showLoading(false);
+                // Close menu
+                downloadMenu.classList.remove('active');
+            }
+        });
+
+        // Download all icon sizes
+        downloadAll.addEventListener('click', async function() {
+            if (!finalIcon) return;
+            
+            showLoading(true);
+            
+            try {
+                // Create a new JSZip instance
+                const zip = new JSZip();
+                
+                // Create folders for iOS and macOS
+                const ios = zip.folder("iOS");
+                const iosIconset = ios.folder("AppIcon.appiconset");
+                
+                const macos = zip.folder("macOS");
+                const macosIconset = macos.folder("AppIcon.appiconset");
+                
+                // Process iOS icons
+                for (const iconConfig of iconSizes.ios) {
+                    const { size, name } = iconConfig;
+                    const resizedIcon = await resizeIcon(finalIcon, size);
+                    iosIconset.file(`${name}.png`, dataURLToBlob(resizedIcon.dataURL));
+                }
+                
+                // Process macOS icons
+                for (const iconConfig of iconSizes.macos) {
+                    const { size, name } = iconConfig;
+                    const resizedIcon = await resizeIcon(finalIcon, size);
+                    macosIconset.file(`${name}.png`, dataURLToBlob(resizedIcon.dataURL));
+                }
+                
+                // Create Contents.json for iOS
+                const iosContents = {
+                    "images": iconSizes.ios.map(({ size, name }) => ({
+                        "size": `${size}x${size}`,
+                        "idiom": "ios-marketing",
+                        "filename": `${name}.png`,
+                        "scale": "1x"
+                    })),
+                    "info": {
+                        "version": 1,
+                        "author": "AI Icon Editor"
+                    }
+                };
+                
+                iosIconset.file("Contents.json", JSON.stringify(iosContents, null, 2));
+                
+                // Create Contents.json for macOS
+                const macosContents = {
+                    "images": iconSizes.macos.map(({ size, name }) => ({
+                        "size": `${size}x${size}`,
+                        "idiom": "mac",
+                        "filename": `${name}.png`,
+                        "scale": "1x"
+                    })),
+                    "info": {
+                        "version": 1,
+                        "author": "AI Icon Editor"
+                    }
+                };
+                
+                macosIconset.file("Contents.json", JSON.stringify(macosContents, null, 2));
+                
+                // Also add the original 1024x1024 icon to the root
+                zip.file("app-icon-1024.png", dataURLToBlob(finalIcon.src));
+                
+                // Generate the zip file
+                const zipBlob = await zip.generateAsync({ type: "blob" });
+                
+                // Create download link for the zip
+                const link = document.createElement('a');
+                link.download = 'app-icons.zip';
+                link.href = URL.createObjectURL(zipBlob);
+                link.click();
+                
+                // Clean up
+                URL.revokeObjectURL(link.href);
+                showLoading(false);
+                
+                // Close menu
+                downloadMenu.classList.remove('active');
+            } catch (error) {
+                console.error('Error creating zip file:', error);
+                showLoading(false);
+            }
+        });
+
+        // NEW: Add event listeners for individual size items
+        sizeItems.forEach(item => {
+            item.addEventListener('click', async (e) => {
+                e.stopPropagation(); // Prevent event from bubbling up
+                
+                if (!finalIcon) return;
+                
+                const size = parseInt(item.getAttribute('data-size'));
+                if (!size) return;
+                
+                showLoading(true);
+                
+                try {
+                    const resizedIcon = await resizeIcon(finalIcon, size);
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = `app-icon-${size}.png`;
+                    link.href = resizedIcon.dataURL;
+                    link.click();
+                } catch (error) {
+                    console.error(`Error resizing icon to ${size}px:`, error);
+                } finally {
+                    showLoading(false);
+                    // Close menu
+                    downloadMenu.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
